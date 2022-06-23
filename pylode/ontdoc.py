@@ -23,11 +23,13 @@ from dominate.tags import (
     div,
     dt,
     dd,
+    img,
 )
 from dominate.util import raw
 from collections import defaultdict
 from typing import Dict
 import shutil
+import os
 from itertools import chain
 from pathlib import Path
 from typing import Union
@@ -100,6 +102,7 @@ class OntDoc:
     """
 
     def __init__(self, ontology: Union[Graph, Path, str]):
+        self.ontology = ontology
         self.ont = load_ontology(ontology)
         self._ontdoc_inference(self.ont)
         self.back_onts = load_background_onts()
@@ -315,6 +318,7 @@ class OntDoc:
         Just calls other helper functions in order"""
         self._make_pylode_logo()
         self._make_metadata()
+        self._make_serialization()
         self._make_main_sections()
         self._make_namespaces()
         self._make_legend()
@@ -373,6 +377,26 @@ class OntDoc:
                 )
         sec.appendChild(d)
         self.content.appendChild(sec)
+    
+    def _make_serialization(self):
+
+        source_file_path = self.ontology # get üath for linking the source file
+        source_file_name = os.path.basename(source_file_path).split(".") # get filename and split for suffix
+
+        # JSON-LD
+        jsonld_file_path = os.path.dirname(source_file_path) + source_file_name[0] + ".jsonld"
+        jsonld_file_name = os.path.basename(jsonld_file_path).split(".")
+
+        # TODO: Check if file exists
+        
+        with self.content:
+            with div(id="serializaion"):
+                h2("Serialization")
+               
+                with a(href=source_file_path):
+                    img(src = f"https://badgen.net/badge/Format/{source_file_name[1]}/blue")
+                with a(href=jsonld_file_path):
+                    img(src = f"https://badgen.net/badge/Format/{jsonld_file_name[1]}/blue")
 
     def _make_schema_org(self):
         sdo = Graph()
