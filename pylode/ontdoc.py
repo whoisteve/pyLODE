@@ -379,24 +379,24 @@ class OntDoc:
         self.content.appendChild(sec)
     
     def _make_serialization(self):
-
-        source_file_path = self.ontology # get üath for linking the source file
-        source_file_name = os.path.basename(source_file_path).split(".") # get filename and split for suffix
+        source_file_absolute_path = self.ontology # get path for linking the source file
+        source_file_name = os.path.basename(source_file_absolute_path).split(".") # get filename and split for suffix to add it to the badge
 
         # JSON-LD
-        jsonld_file_path = os.path.dirname(source_file_path) + source_file_name[0] + ".jsonld"
-        jsonld_file_name = os.path.basename(jsonld_file_path).split(".")
+        jsonld_file_absolute_path = os.path.join(os.path.dirname(source_file_absolute_path), source_file_name[0] + ".jsonld")
+        jsonld_file_name = os.path.basename(jsonld_file_absolute_path).split(".")
 
-        # TODO: Check if file exists
-        
         with self.content:
-            with div(id="serializaion"):
+            with div(id="serializaion", _class="section"):
                 h2("Serialization")
-               
-                with a(href=source_file_path):
-                    img(src = f"https://badgen.net/badge/Format/{source_file_name[1]}/blue")
-                with a(href=jsonld_file_path):
-                    img(src = f"https://badgen.net/badge/Format/{jsonld_file_name[1]}/blue")
+                with dl():
+                    with dt(): # source file
+                        with a(href=source_file_absolute_path):
+                            img(src = f"https://badgen.net/badge/Format/{source_file_name[1]}/blue")
+                    if os.path.isfile(jsonld_file_absolute_path): # JSON-LD
+                        with dt(): 
+                            with a(href=jsonld_file_absolute_path):
+                                img(src = f"https://badgen.net/badge/Format/{jsonld_file_name[1]}/blue")
 
     def _make_schema_org(self):
         sdo = Graph()
