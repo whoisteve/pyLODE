@@ -387,7 +387,7 @@ class OntDoc:
         jsonld_file_name = os.path.basename(jsonld_file_absolute_path).split(".")
 
         with self.content:
-            with div(id="serializaion", _class="section"):
+            with div(id="serialization", _class="section"):
                 h2("Serialization")
                 with dl():
                     with dt(): # source file
@@ -627,6 +627,7 @@ class OntDoc:
                 h3("Table of Contents")
                 with ul(_class="first"):
                     li(h4(a("Metadata", href="#metadata")))
+                    li(h4(a("Serialization", href="#serialization")))
 
                     if (
                         self.toc.get("classes") is not None
