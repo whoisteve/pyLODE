@@ -1,3 +1,5 @@
+from ntpath import join
+import os
 import dominate
 from dominate.tags import (
     h2,
@@ -23,6 +25,7 @@ from dominate.tags import (
     div,
     dt,
     dd,
+    img,
 )
 from dominate.util import raw
 from collections import defaultdict
@@ -315,7 +318,9 @@ class OntDoc:
         Just calls other helper functions in order"""
         self._make_pylode_logo()
         self._make_metadata()
+        self._make_serialization()
         self._make_main_sections()
+        self._make_validation_report()
         self._make_namespaces()
         self._make_legend()
         self._make_toc()
@@ -373,6 +378,52 @@ class OntDoc:
                 )
         sec.appendChild(d)
         self.content.appendChild(sec)
+
+    def _make_serialization(self):  
+        hasFormat = ""
+        mime = ""
+        for s_ in chain(
+            self.ont.subjects(predicate=RDF.type, object=OWL.Ontology),
+            self.ont.subjects(predicate=RDF.type, object=SKOS.ConceptScheme),
+            self.ont.subjects(predicate=RDF.type, object=PROF.Profile),
+        ):
+            for p_, o in self.ont.predicate_objects(s_):
+                if p_ in ONT_PROPS:
+                    if p_ == DCTERMS.hasFormat:
+                        hasFormat = o
+                    if p_ == DCTERMS.format:
+                        mime = o
+
+        if not (hasFormat == "") and not (mime == ""):
+            format = mime.split("/")
+            with self.content:
+                with div(id="serialization", _class="section"):
+                    h2("Serialization")
+                    with dl():
+                        with dt(): # source file
+                            with a(href=hasFormat):
+                                img(src = f"https://badgen.net/badge/Format/{format[1]}/blue")
+                        if( # json-ld
+                            os.path.exists(os.path.join(os.path.dirname(hasFormat),"","") +
+                            os.path.basename(hasFormat).split(".")[0] +
+                            ".jsonld")
+                        ):
+                            with dt(): 
+                                with a(href=os.path.join(os.path.dirname(hasFormat),"","") + os.path.basename(hasFormat).split(".")[0] + ".jsonld"):
+                                    img(src = f"https://badgen.net/badge/Format/json-ld/blue")
+
+    def _make_validation_report(self):
+        with self.content:
+            with div(id="report", _class="section"):
+                
+                if os.path.exists("validation-report.html"):
+                    h2(a("Validation Report", href="validation-report.html"))
+                    with ul():
+                        li(a("validation-report.ttl", href="validation-report.ttl"))
+                else:
+                    h2("Validation Report")
+                    with ul():
+                        li("No validation report found")        
 
     def _make_schema_org(self):
         sdo = Graph()
@@ -603,6 +654,7 @@ class OntDoc:
                 h3("Table of Contents")
                 with ul(_class="first"):
                     li(h4(a("Metadata", href="#metadata")))
+                    li(h4(a("Serialization", href="#serialization")))
 
                     if (
                         self.toc.get("classes") is not None
@@ -675,6 +727,8 @@ class OntDoc:
                             with ul(_class="second"):
                                 for c in self.toc["functionalproperties"]:
                                     li(a(c[1], href=c[0]))
+                    
+                    li(h4(a("Validation Report", href="#report")))
 
                     with li():
                         h4(a("Namespaces", href="#namespaces"))
